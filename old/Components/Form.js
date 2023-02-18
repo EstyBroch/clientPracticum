@@ -5,104 +5,117 @@ import ChildInputs from "./ChildInputs";
 import { useNavigate } from 'react-router-dom';
 import exportToExcel from "./ExportToExcel";
 
-
 export default () => {
 
     const navigate = useNavigate();
     const [childrenForForm, setChildrenForForm] = useState([]);
     const [isValid, setIsValid] = useState(true);
 
+
+
     const { register, handleSubmit, formState: { errors } } = useForm({
         mode: "onBlur"
     });
-    const onFormSubmit = async (e) => {
+    const postUser = async (e) => {
+        let userFromServer
+        const user = {
+            firstName: e.firstName, lastName: e.lastName, idNumber: e.idNumber, dateOfBirth: e.dateOfBirth,
+            gender: parseInt(e.gender), HMO: parseInt(e.HMO)
+        }
+        await axios.get(`https://localhost:44381/api/Users/${e.idNumber}`)//check if this user is exists
+            .then((d) => {
+                console.log("data from get:", d)
+                userFromServer = d.data
+                console.log("user from server:", userFromServer)
+            })
+            .catch((error) => console.log("error from get", error))
 
-        let userFromServer, childFromServer
-        const
-            user = {
-                firstName: e.firstName, lastName: e.lastName, idNumber: e.idNumber, dateOfBirth: e.dateOfBirth,
-                gender: parseInt(e.gender), HMO: parseInt(e.HMO)
-            }
+        if (userFromServer === undefined || userFromServer === "") {//add the user if he is not exists
+            await axios.post('https://localhost:44381/api/Users', user)
+                .then((d) => console.log("data from post :", d))
+                .catch((error) => console.log("error from get", error))
+        }
+        else {
+            await axios.put(`https://localhost:44381/api/Users/${userFromServer.id}`, user)//update the user if he exists
+                .then((d) => console.log("data from put :", d))
+                .catch((error) => console.log("error from get", error))
+        }
+        return userFromServer
+    }
+    const postChild = async (e, userFromServer, i) => {
+        let childFromServer
+        const child = {
+            name: sessionStorage.getItem(`child${i}Name`), idNumber: sessionStorage.getItem(`child${i}idNumber`), dateOfBirth:
+                sessionStorage.getItem(`child${i}DateOfBirth`), idFather: null, idMother: null
+        }
+
+        await axios.get(`https://localhost:44381/api/Children/${sessionStorage.getItem(`child${i}idNumber`)}`)//check if this child is exists
+            .then((d) => {
+                console.log("data from get child number :", i, "  ", d)
+                childFromServer = d.data
+                console.log("child from server:", childFromServer)
+            })
+            .catch((error) => console.log("error from get", error))
+        //set the child's parents
+        if (e.gender === "1") {
+            child.idFather = userFromServer.id
+            if (!childFromServer === "")
+                child.idMother = childFromServer.idMother
+        }
+        else {
+            child.idMother = userFromServer.id
+            if (!childFromServer === "")
+                child.idFather = childFromServer.idFather
+        }
+
+        if (childFromServer === "") {//add the child if he is not exists
+            console.log("child:", child)
+            await axios.post('https://localhost:44381/api/Children', child)
+                .then((d) => console.log("data from post child:", d))
+                .catch((error) => console.log("error from get", error))
+        }
+        else {
+            await axios.put(`https://localhost:44381/api/Children/${childFromServer.id}`, child)//update the child if he exists
+                .then((d) => console.log("data from put :", d))
+                .catch((error) => console.log("error from get", error))
+        }
+    }
+    const checkCildInputs = (i) => {
+        if (sessionStorage.getItem(`child${i}Name`) === null || sessionStorage.getItem(`child${i}idNumber`) === null ||
+            sessionStorage.getItem(`child${i}DateOfBirth`) === null) {
+            setIsValid(false)
+            // var myDiv = document.createElement('label');
+            // document.body.appendChild(myDiv);
+            // myDiv.innerHTML='   *  '+ 'חסר מידע על ילד מספר ' + i  ;
+            // myDiv.style.color = "red";
+        }
+    }
+    // const emptyInputs = () => {
+    //    
+    // }
+    const onFormSubmit = async (e) => {
+        exportToExcel()
         //check if all the inputs of the children are full
         for (let i = 1; i <= e.numOfChildren; i++) {
-
-            if (sessionStorage.getItem(`child${i}Name`) === null || sessionStorage.getItem(`child${i}idNumber`) === null ||
-                sessionStorage.getItem(`child${i}DateOfBirth`) === null) {
-                setIsValid(false)
-                let a = document.getElementsByClassName(`child{i}error`);
-                a.style.display = "none";
-
-                alert('gg');
-            }
-
+            checkCildInputs(i)
         }
-
         if (isValid) {
-            await axios.get(`https://localhost:44381/api/Users/${e.idNumber}`)//check if this user is exists
-                .then((d) => {
-                    console.log("data from get:", d)
-                    userFromServer = d.data
-                    console.log("user from server:", userFromServer)
-                })
-                .catch((error) => console.log("error from get", error))
-
-            if (userFromServer === undefined || userFromServer === "") {//add the user if he is not exists
-                await axios.post('https://localhost:44381/api/Users', user)
-                    .then((d) => console.log("data from post :", d))
-                    .catch((error) => console.log("error from get", error))
-
-            }
-            else {
-                await axios.put(`https://localhost:44381/api/Users/${userFromServer.id}`, user)//update the user if he exists
-                    .then((d) => console.log("data from put :", d))
-                    .catch((error) => console.log("error from get", error))
-            }
-
+            const userFromServer = await postUser(e)
             for (let i = 1; i <= e.numOfChildren; i++) {
-                const child = {
-                    name: sessionStorage.getItem(`child${i}Name`), idNumber: sessionStorage.getItem(`child${i}idNumber`), dateOfBirth:
-                        sessionStorage.getItem(`child${i}DateOfBirth`), idFather: null, idMother: null
-                }
-
-                await axios.get(`https://localhost:44381/api/Children/${sessionStorage.getItem(`child${i}idNumber`)}`)//check if this child is exists
-                    .then((d) => {
-                        console.log("data from get child number :", i, "  ", d)
-                        childFromServer = d.data
-                        console.log("child from server:", childFromServer)
-                    })
-                    .catch((error) => console.log("error from get", error))
-                //set the child's parents
-                if (e.gender === "1") {
-                    child.idFather = userFromServer.id
-                    if (!childrenForForm === "")
-                        child.idMother = childFromServer.idMother
-                }
-                else {
-                    child.idMother = userFromServer.id
-                    if (!childrenForForm === "")
-                        child.idFather = childFromServer.idFather
-                }
-
-                if (childFromServer === "") {//add the child if he is not exists
-                    console.log("child:", child)
-                    await axios.post('https://localhost:44381/api/Children', child)
-                        .then((d) => console.log("data from post child:", d))
-                        .catch((error) => console.log("error from get", error))
-                }
-                else {
-                    await axios.put(`https://localhost:44381/api/Children/${childFromServer.id}`, child)//update the child if he exists
-                        .then((d) => console.log("data from put :", d))
-                        .catch((error) => console.log("error from get", error))
-                }
+                postChild(e, userFromServer, i)
             }
-            exportToExcel()
         }
 
+        alert("הפרטים נקלטו בהצלחה")
     }
     useEffect(() => {
         changeNumOfChildren()
+      
     }, [])
     const changeNumOfChildren = (e) => {
+
+
+
         const c = [];
         for (let i = 1; i <= sessionStorage.getItem('numOfChildren'); i++) {
             c.push(<ChildInputs index={i} key={i} ></ChildInputs>)
@@ -171,7 +184,7 @@ export default () => {
                                     sessionStorage.setItem('lastName', e.target.value)
                                 }}
                                 {...register('lastName', registerOptions.lastName)} />
-                            <small style={{ color: 'red' }} >  {errors?.lastName && errors.lastName.message}</small>
+                            <small style={{ color: 'red' }}>  {errors?.lastName && errors.lastName.message}</small>
 
 
                         </div>
@@ -218,7 +231,7 @@ export default () => {
                                 <option value="2">נקבה</option>
                             </select>
                         </div>
-                    </div >
+                    </div>
 
                     <div className="form-group col-md-4">
                         <label className="col control-label col-sm-6">קופת חולים</label>
@@ -245,12 +258,15 @@ export default () => {
                                 changeNumOfChildren()
                             }}
                             {...register('numOfChildren', registerOptions.numOfChildren)} />
-                        <small>  {errors?.numOfChildren && errors.numOfChildren.message}</small>
+                        <small style={{ color: 'red' }}>  {errors?.numOfChildren && errors.numOfChildren.message}</small>
                     </div>
                 </div>
                 {childrenForForm}
                 <br />
                 <br />
+
+
+
 
                 <button className="btn btn-primary">אישור</button>
 
