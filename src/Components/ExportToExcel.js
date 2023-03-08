@@ -1,11 +1,12 @@
 import * as XLSX from 'xlsx'
 
 const exportToExcel = () => {
-//   const userCtx=useContext(userContext)
 
 let user={firstName:sessionStorage.getItem('firstName'),lastName:sessionStorage.getItem('lastName'),idNumber:sessionStorage.getItem('idNumber'),
 dataOfBirth:sessionStorage.getItem('date'),gender:sessionStorage.getItem('gender'),HMO:sessionStorage.getItem('HMO'),numOfChildren:sessionStorage.getItem('numOfChildren')
 }
+console.log("user excel",user)
+
 const children=[]
 for (let i = 1; i <= sessionStorage.getItem('numOfChildren'); i++) {
   children.push({name:sessionStorage.getItem(`child${i}Name`),idNumber:sessionStorage.getItem(`child${i}idNumber`),dateOfBirth:sessionStorage.getItem(`child${i}DateOfBirth`)})

@@ -34,8 +34,7 @@ export default ({ index }) => {
                     />
                 </div>
             </div>
-            
-           
+            <label className={`child{index}error`} id={`child{index}error`} style={{display:"visible"}}>שדה חובה</label>
         </div>
     )
 

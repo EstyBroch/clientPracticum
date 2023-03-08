@@ -8,12 +8,8 @@ function App() {
   return (
     <div>
       <BrowserRouter>
-      
-    
         <MyRouter></MyRouter>
       </BrowserRouter>
-
-
     </div>
   );
 }

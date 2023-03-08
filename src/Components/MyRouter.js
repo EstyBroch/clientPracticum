@@ -16,8 +16,8 @@ export default()=>{
 
 
 <Routes>
+    <Route path="/" element={<Instructions></Instructions>}/>
     <Route path="/form" element={<Form></Form>}/>
-    <Route path="/" element={<Form></Form>}/>
     <Route path="/instructions" element={<Instructions></Instructions>}/>
     
 </Routes>
