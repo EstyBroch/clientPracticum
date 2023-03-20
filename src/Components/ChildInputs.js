@@ -34,7 +34,6 @@ export default ({ index }) => {
                     />
                 </div>
             </div>
-            
            
         </div>
     )
